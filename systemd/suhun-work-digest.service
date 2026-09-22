@@ -1,0 +1,17 @@
+[Unit]
+Description=Generate the local suhun daily work digest
+After=suhun-portal.service
+PartOf=graphical-session.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/suhun/portal
+ExecStart=%h/suhun/portal/.venv/bin/python %h/suhun/portal/work_digest.py
+TimeoutStartSec=240
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=tmpfs
+BindPaths=%h/suhun/portal
+BindReadOnlyPaths=-%h/.codex/sessions -%h/.codex/history.jsonl -%h/.claude/projects/-home-ipis-woker1-suhun -%h/.local/share/opencode/opencode.db -%h/.local/share/opencode/opencode.db-wal -%h/.local/share/opencode/opencode.db-shm -%h/suhun/HANDOFF.md -%h/suhun/.git

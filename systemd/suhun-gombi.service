@@ -1,0 +1,15 @@
+[Unit]
+Description=suhun Gombi desktop pet
+Requires=suhun-portal.service
+PartOf=graphical-session.target
+After=suhun-portal.service graphical-session.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/suhun/portal
+ExecStart=/usr/bin/python3 %h/suhun/portal/desktop_pet.py
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=graphical-session.target

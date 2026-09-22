@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>회사 업무 관리 - 업무 앱</title>
+<link rel="stylesheet" href="/assets/portal.css?v=20260919b">
+<link rel="stylesheet" href="/assets/assistant.css?v=20260917">
+<link rel="icon" type="image/svg+xml" href="/assets/calendar-favicon.svg">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" aria-label="회사 업무 관리 메뉴">
+    <a class="brand" href="/" aria-label="회사 업무 관리 홈">
+      <svg class="brand-mark" viewBox="0 0 30 30" aria-hidden="true">
+        <path fill="currentColor" d="M4 4h9v9H4zM17 4h9v4h-9zM17 11h9v15h-9zM4 17h9v9H4z"/>
+      </svg>
+      <span class="brand-name">회사 업무 관리</span>
+    </a>
+    <nav class="side-nav" aria-label="주요 메뉴">
+      <a href="/">업무 현황</a>
+      <a class="active" href="/apps">업무 앱</a>
+      <a href="/tasks">할 일</a>
+      <a href="/goals">목표 관리</a>
+      <a href="/organize">TODO-LIST</a>
+      <button type="button" data-open-manual>사용 안내</button>
+    </nav>
+    <p class="side-footer">개인 업무 공간<br>운영 도구와 목표를 한곳에서 관리합니다.</p>
+  </aside>
+  <div class="workspace">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="breadcrumb" aria-label="현재 위치"><span>홈</span><span aria-hidden="true">/</span><strong>업무 앱</strong></div>
+        <div class="topbar-actions">
+          <time class="today" id="today" aria-label="오늘 날짜"></time>
+          <button class="assistant-opener" id="assistant-opener" type="button">내 비서</button>
+          <button class="help-link" type="button" data-open-manual>사용 안내 보기</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="content" id="main-content">
+      <section class="section-block" id="apps-section" aria-labelledby="apps-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="apps-title">업무 앱 바로가기</h2>
+            <p>회사·개인 프로젝트로 나눠 보여줍니다. 외부 링크는 바로 새 탭으로 열립니다.</p>
+          </div>
+          <div class="section-actions">
+            <span id="apps-last-check" class="last-check">마지막 성공 확인: —</span>
+            <button id="apps-refresh" class="quiet-button" type="button">상태 새로고침</button>
+            <span id="apps-status" class="sr-only" aria-live="polite"></span>
+          </div>
+        </div>
+        <div id="apps" class="apps-grouped" aria-live="polite" aria-busy="false"></div>
+      </section>
+      <dialog class="manual-dialog" id="manual-dialog" aria-labelledby="manual-title">
+        <div class="manual-shell">
+          <header class="manual-header">
+            <div class="manual-heading">
+              <p class="section-label">도움말</p>
+              <h2 id="manual-title">사용 안내</h2>
+              <p>서비스 설치와 연결 오류를 확인하는 방법입니다.</p>
+            </div>
+            <button class="manual-close" id="manual-close" type="button" aria-label="사용 안내 닫기" autofocus>×</button>
+          </header>
+        <div class="manual-content">
+          <p class="manual-intro">포털은 로컬 주소 <code>http://127.0.0.1:8080</code>에서 세 앱의 백엔드 상태를 확인하고 화면을 엽니다. 포털 서비스를 시작하면 IPIS·CLINK·Trading 서비스도 함께 시작됩니다.</p>
+          <details>
+            <summary>처음 한 번 설치하고 시작하기</summary>
+            <p>서비스 파일을 사용자 systemd에 복사한 뒤 포털과 원격 프록시를 시작합니다.</p>
+            <pre><code>mkdir -p ~/.config/systemd/user
+cp ~/suhun/portal/systemd/suhun-portal.service ~/suhun/portal/systemd/suhun-tailscale-proxy@.service ~/suhun/portal/systemd/suhun-tailscale-proxy@.socket ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now suhun-portal.service</code></pre>
+            <p><code>enable</code>은 로그인 때 시작합니다. 이 PC는 이미 <code>Linger=yes</code>라 부팅 뒤 로그인 전에도 시작합니다.</p>
+          </details>
+          <details>
+            <summary>집에서 Tailscale로 접속하기</summary>
+            <p>휴대폰·노트북에 Tailscale 앱을 설치하고 같은 계정/네트워크에 로그인한 뒤, PC가 켜지고 연결된 상태로 아래 HTTP 주소를 엽니다. tailnet 정책이 포트를 허용해야 합니다.</p>
+            <ul class="remote-links" aria-label="Tailscale 원격 접속 링크">
+              <li><a class="remote-link" href="http://100.97.194.62:8080" target="_blank" rel="noopener noreferrer"><span class="remote-link-label"><span class="remote-link-name">회사 업무 관리</span><span class="remote-link-url">http://100.97.194.62:8080</span></span><span class="remote-link-newtab">새 탭 ↗</span></a></li>
+              <li><a class="remote-link" href="http://100.97.194.62:5175" target="_blank" rel="noopener noreferrer"><span class="remote-link-label"><span class="remote-link-name">CLINK</span><span class="remote-link-url">http://100.97.194.62:5175</span></span><span class="remote-link-newtab">새 탭 ↗</span></a></li>
+              <li><a class="remote-link" href="http://100.97.194.62:5173" target="_blank" rel="noopener noreferrer"><span class="remote-link-label"><span class="remote-link-name">IPIS</span><span class="remote-link-url">http://100.97.194.62:5173</span></span><span class="remote-link-newtab">새 탭 ↗</span></a></li>
+              <li><a class="remote-link" href="http://100.97.194.62:5174" target="_blank" rel="noopener noreferrer"><span class="remote-link-label"><span class="remote-link-name">Trading</span><span class="remote-link-url">http://100.97.194.62:5174</span></span><span class="remote-link-newtab">새 탭 ↗</span></a></li>
+            </ul>
+            <p>전송은 Tailscale 터널로 보호되지만 HTTP 주소는 HTTPS가 아닙니다. HTTP에서는 브라우저 Clipboard API가 막힐 수 있으니 노트북은 키보드 복사·붙여넣기(Ctrl/Cmd+C, Ctrl/Cmd+V), 휴대폰은 길게 눌러 복사·붙여넣기를 쓰세요. 포털의 앱 링크는 현재 주소를 자동으로 사용합니다.</p>
+            <p><a href="https://company-com.tail52eb07.ts.net" target="_blank" rel="noopener noreferrer">회사 업무 관리 HTTPS</a> · Tailscale 연결 후 접속</p>
+            <pre><code>sudo tailscale serve --bg --https=443 http://127.0.0.1:8080</code></pre>
+            <p>이 PC의 Tailscale IP가 바뀌면 <code>tailscale ip -4</code>로 확인해 socket 템플릿 <code>suhun-tailscale-proxy@.socket</code>의 <code>ListenStream=</code> 주소를 바꾸고 다시 복사·<code>daemon-reload</code>하세요. 새 연결이 이전 프록시를 다시 활성화하지 않게 소켓을 먼저 닫고, 서비스를 중지한 뒤 새 소켓을 시작합니다.</p>
+          </details>
+          <details>
+            <summary>서비스 제어와 로그</summary>
+            <pre><code>systemctl --user stop suhun-portal.service
+systemctl --user restart suhun-portal.service
+systemctl --user status suhun-portal.service --no-pager
+journalctl --user -u suhun-portal.service -n 100 -f
+journalctl --user -u ipis-cmt-web.service -n 100 -f
+journalctl --user -u clink-web.service -n 100 -f
+journalctl --user -u trading-agent-dashboard.service -n 100 -f</code></pre>
+            <p>포털을 중지해도 함께 시작된 세 앱 서비스는 계속 실행됩니다. 앱도 중지하려면 각 앱 서비스에 별도로 <code>stop</code>을 실행하세요.</p>
+            <p>원격 8080·5175만 닫을 때는 <code>systemctl --user stop suhun-tailscale-proxy@8080.socket suhun-tailscale-proxy@5175.socket</code>를 먼저, 해당 <code>.service</code> 두 개를 다음에 중지합니다. 세 앱은 계속 실행됩니다.</p>
+            <p>Trading 화면이 응답하지 않으면 <code>/tmp/trading8510.log</code>도 확인하세요.</p>
+          </details>
+          <details>
+            <summary>앱만 따로 시작하기</summary>
+            <pre><code>systemctl --user start ipis-cmt-web.service
+systemctl --user start clink-web.service
+systemctl --user start trading-agent-dashboard.service</code></pre>
+          </details>
+          <details>
+            <summary>목표와 연결 오류</summary>
+            <p>날짜를 고르면 그 날짜의 할 일 기록을 봅니다. 날짜를 비우면 저장하거나 조회할 수 없습니다. 과거 할 일은 자동으로 지워지지 않으며 전체 저장 한도는 1,000개입니다. 제목은 공백 제외 1~200자로 저장되고 완료 상태는 체크박스로 바꿉니다. 할 일에는 우선순위·메모를 남기고 목표에 연결할 수 있습니다. 목표 관리에서는 주간·일간 목표를 직접 추가·수정·삭제하며, 수치형(목표 수치 기준 진행률)과 체크형(연결된 할 일 완료 기준 진행률)을 고를 수 있습니다. 목표 카드에서 할 일을 연결하거나 새로 만들 수 있고, 목표를 삭제해도 할 일은 유지되고 연결만 해제됩니다. 다른 곳에서 목표가 바뀌면 새로고침 후 다시 저장합니다. 아침 정리 입력란에 어제 한 일과 오늘 할 일을 적고 수치를 대화로 좁혀 보세요. IPIS와 CLINK의 주간·일일 목표 초안이 나오면 <strong>이 목표로 확정</strong>을 눌렀을 때만 저장합니다. 새로고침하면 채팅 내용이 사라집니다.</p>
+            <p>앱 카드는 프런트 화면이 아니라 백엔드 health 응답만 확인합니다. 실행 실패나 연결 실패가 보이면 위의 <code>status</code>와 <code>journalctl</code> 명령으로 포털 및 해당 앱 서비스 로그를 확인하세요.</p>
+          </details>
+        </div>
+        </div>
+      </dialog>
+      <dialog class="assistant-dialog" id="assistant-dialog" aria-labelledby="assistant-title">
+        <div class="assistant-shell">
+          <header class="assistant-header"><div><h2 id="assistant-title">업무 비서 곰비</h2><p>저장된 업무를 바탕으로 오늘을 정리해요.</p></div><button class="assistant-close" id="assistant-close" type="button" aria-label="업무 비서 닫기">×</button></header>
+          <section class="assistant-summary" aria-label="업무 요약"><p id="assistant-summary-text" aria-live="polite">업무를 확인하는 중이에요.</p><div id="assistant-summary-list" class="assistant-summary-list"></div><div class="assistant-actions"><div class="assistant-actions-main"><button id="assistant-today" type="button">오늘 할 일</button><button id="assistant-organize" type="button">업무 정리</button><button id="assistant-goals" type="button">목표 보기</button></div><div class="assistant-actions-sub"><button id="assistant-pause" type="button">잠시 멈춤</button><button id="assistant-hide" type="button">비서 숨기기</button></div></div></section>
+          <div class="assistant-chat-slot" id="assistant-chat-slot"></div>
+        </div>
+      </dialog>
+</main>
+  </div>
+</div>
+<div id="secretary-overlay" aria-hidden="false"><div id="secretary-roamer"><div class="secretary-bubble" id="secretary-bubble" role="status"><strong>업무 비서 곰비</strong><p id="secretary-bubble-text">안녕하세요, 오늘 업무를 함께 볼게요.</p><button id="secretary-bubble-dismiss" type="button" aria-label="알림 닫기">×</button></div><div class="secretary-dock"><button id="secretary-mascot" class="secretary-mascot" type="button" aria-label="업무 비서 곰비 열기 (드래그로 이동 가능)"></button><div class="mascot-controls" role="group" aria-label="업무 비서 제어"><button id="secretary-chat" class="mascot-control" type="button" title="업무 비서 대화 열기">대화</button><button id="secretary-pause" class="mascot-control" type="button" aria-pressed="false" title="이동 정지"><span class="mascot-control-icon" aria-hidden="true">■</span><span>이동 정지</span></button><button id="secretary-hide" class="mascot-control" type="button" title="업무 비서 숨기기">숨기기</button></div></div></div></div>
+
+<script src="/assets/portal.js?v=20260919b"></script>
+<script type="module" src="/assets/assistant.js?v=20260917"></script>
+</body>
+</html>

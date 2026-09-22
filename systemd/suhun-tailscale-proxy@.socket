@@ -1,0 +1,9 @@
+[Unit]
+Description=suhun Tailscale TCP proxy on port %i
+
+[Socket]
+ListenStream=100.97.194.62:%i
+FreeBind=yes
+
+[Install]
+WantedBy=sockets.target

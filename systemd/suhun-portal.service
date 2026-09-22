@@ -1,0 +1,12 @@
+[Unit]
+Description=suhun portal
+Wants=ipis-cmt-web.service clink-web.service trading-agent-dashboard.service suhun-tailscale-proxy@8080.socket suhun-tailscale-proxy@5175.socket
+After=ipis-cmt-web.service clink-web.service trading-agent-dashboard.service suhun-tailscale-proxy@8080.socket suhun-tailscale-proxy@5175.socket
+
+[Service]
+WorkingDirectory=%h/suhun/portal
+ExecStart=%h/suhun/portal/run.sh
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

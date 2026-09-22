@@ -1,0 +1,11 @@
+[Unit]
+Description=suhun Tailscale TCP proxy to 127.0.0.1:%i
+
+[Service]
+Type=notify
+ExecStart=/usr/lib/systemd/systemd-socket-proxyd 127.0.0.1:%i
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+RestrictAddressFamilies=AF_UNIX AF_INET

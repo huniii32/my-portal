@@ -1,0 +1,16 @@
+# 런타임 데이터 (로컬 JSON 저장소)
+data/
+
+# 파이썬 도구
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+
+# 에이전트/로컬 도구
+.claude-flow/
+
+# 로그·환경·임시
+*.log
+.env
+*.tmp
