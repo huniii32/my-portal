@@ -77,7 +77,7 @@
             <button class="manual-close" id="manual-close" type="button" aria-label="사용 안내 닫기" autofocus>×</button>
           </header>
         <div class="manual-content">
-          <p class="manual-intro">포털은 로컬 주소 <code>http://127.0.0.1:8080</code>에서 세 앱의 백엔드 상태를 확인하고 화면을 엽니다. 포털 서비스를 시작하면 IPIS·CLINK·Trading 서비스도 함께 시작됩니다.</p>
+          <p class="manual-intro">포털은 로컬 주소 <code>http://127.0.0.1:8080</code>에서 세 앱의 백엔드 상태를 확인하고 화면을 엽니다. 포털 서비스를 시작하면 IPIS·Trading 서비스도 함께 시작됩니다.</p>
           <details>
             <summary>처음 한 번 설치하고 시작하기</summary>
             <p>서비스 파일을 사용자 systemd에 복사한 뒤 포털과 원격 프록시를 시작합니다.</p>
@@ -92,7 +92,6 @@ systemctl --user enable --now suhun-portal.service</code></pre>
             <p>휴대폰·노트북에 Tailscale 앱을 설치하고 같은 계정/네트워크에 로그인한 뒤, PC가 켜지고 연결된 상태로 아래 HTTP 주소를 엽니다. tailnet 정책이 포트를 허용해야 합니다.</p>
             <ul class="remote-links" aria-label="Tailscale 원격 접속 링크">
               <li><a class="remote-link" href="http://100.97.194.62:8080" target="_blank" rel="noopener noreferrer"><span class="remote-link-label"><span class="remote-link-name">회사 업무 관리</span><span class="remote-link-url">http://100.97.194.62:8080</span></span><span class="remote-link-newtab">새 탭 ↗</span></a></li>
-              <li><a class="remote-link" href="http://100.97.194.62:5175" target="_blank" rel="noopener noreferrer"><span class="remote-link-label"><span class="remote-link-name">CLINK</span><span class="remote-link-url">http://100.97.194.62:5175</span></span><span class="remote-link-newtab">새 탭 ↗</span></a></li>
               <li><a class="remote-link" href="http://100.97.194.62:5173" target="_blank" rel="noopener noreferrer"><span class="remote-link-label"><span class="remote-link-name">IPIS</span><span class="remote-link-url">http://100.97.194.62:5173</span></span><span class="remote-link-newtab">새 탭 ↗</span></a></li>
               <li><a class="remote-link" href="http://100.97.194.62:5174" target="_blank" rel="noopener noreferrer"><span class="remote-link-label"><span class="remote-link-name">Trading</span><span class="remote-link-url">http://100.97.194.62:5174</span></span><span class="remote-link-newtab">새 탭 ↗</span></a></li>
             </ul>
@@ -108,7 +107,6 @@ systemctl --user restart suhun-portal.service
 systemctl --user status suhun-portal.service --no-pager
 journalctl --user -u suhun-portal.service -n 100 -f
 journalctl --user -u ipis-cmt-web.service -n 100 -f
-journalctl --user -u clink-web.service -n 100 -f
 journalctl --user -u trading-agent-dashboard.service -n 100 -f</code></pre>
             <p>포털을 중지해도 함께 시작된 세 앱 서비스는 계속 실행됩니다. 앱도 중지하려면 각 앱 서비스에 별도로 <code>stop</code>을 실행하세요.</p>
             <p>원격 8080·5175만 닫을 때는 <code>systemctl --user stop suhun-tailscale-proxy@8080.socket suhun-tailscale-proxy@5175.socket</code>를 먼저, 해당 <code>.service</code> 두 개를 다음에 중지합니다. 세 앱은 계속 실행됩니다.</p>
@@ -117,12 +115,11 @@ journalctl --user -u trading-agent-dashboard.service -n 100 -f</code></pre>
           <details>
             <summary>앱만 따로 시작하기</summary>
             <pre><code>systemctl --user start ipis-cmt-web.service
-systemctl --user start clink-web.service
 systemctl --user start trading-agent-dashboard.service</code></pre>
           </details>
           <details>
             <summary>목표와 연결 오류</summary>
-            <p>날짜를 고르면 그 날짜의 할 일 기록을 봅니다. 날짜를 비우면 저장하거나 조회할 수 없습니다. 과거 할 일은 자동으로 지워지지 않으며 전체 저장 한도는 1,000개입니다. 제목은 공백 제외 1~200자로 저장되고 완료 상태는 체크박스로 바꿉니다. 할 일에는 우선순위·메모를 남기고 목표에 연결할 수 있습니다. 목표 관리에서는 주간·일간 목표를 직접 추가·수정·삭제하며, 수치형(목표 수치 기준 진행률)과 체크형(연결된 할 일 완료 기준 진행률)을 고를 수 있습니다. 목표 카드에서 할 일을 연결하거나 새로 만들 수 있고, 목표를 삭제해도 할 일은 유지되고 연결만 해제됩니다. 다른 곳에서 목표가 바뀌면 새로고침 후 다시 저장합니다. 아침 정리 입력란에 어제 한 일과 오늘 할 일을 적고 수치를 대화로 좁혀 보세요. IPIS와 CLINK의 주간·일일 목표 초안이 나오면 <strong>이 목표로 확정</strong>을 눌렀을 때만 저장합니다. 새로고침하면 채팅 내용이 사라집니다.</p>
+            <p>날짜를 고르면 그 날짜의 할 일 기록을 봅니다. 날짜를 비우면 저장하거나 조회할 수 없습니다. 과거 할 일은 자동으로 지워지지 않으며 전체 저장 한도는 1,000개입니다. 제목은 공백 제외 1~200자로 저장되고 완료 상태는 체크박스로 바꿉니다. 할 일에는 우선순위·메모를 남기고 목표에 연결할 수 있습니다. 목표 관리에서는 주간·일간 목표를 직접 추가·수정·삭제하며, 수치형(목표 수치 기준 진행률)과 체크형(연결된 할 일 완료 기준 진행률)을 고를 수 있습니다. 목표 카드에서 할 일을 연결하거나 새로 만들 수 있고, 목표를 삭제해도 할 일은 유지되고 연결만 해제됩니다. 다른 곳에서 목표가 바뀌면 새로고침 후 다시 저장합니다. 아침 정리 입력란에 어제 한 일과 오늘 할 일을 적고 수치를 대화로 좁혀 보세요. IPIS의 주간·일일 목표 초안이 나오면 <strong>이 목표로 확정</strong>을 눌렀을 때만 저장합니다. 새로고침하면 채팅 내용이 사라집니다.</p>
             <p>앱 카드는 프런트 화면이 아니라 백엔드 health 응답만 확인합니다. 실행 실패나 연결 실패가 보이면 위의 <code>status</code>와 <code>journalctl</code> 명령으로 포털 및 해당 앱 서비스 로그를 확인하세요.</p>
           </details>
         </div>
@@ -140,7 +137,7 @@ systemctl --user start trading-agent-dashboard.service</code></pre>
 </div>
 <div id="secretary-overlay" aria-hidden="false"><div id="secretary-roamer"><div class="secretary-bubble" id="secretary-bubble" role="status"><strong>업무 비서 곰비</strong><p id="secretary-bubble-text">안녕하세요, 오늘 업무를 함께 볼게요.</p><button id="secretary-bubble-dismiss" type="button" aria-label="알림 닫기">×</button></div><div class="secretary-dock"><button id="secretary-mascot" class="secretary-mascot" type="button" aria-label="업무 비서 곰비 열기 (드래그로 이동 가능)"></button><div class="mascot-controls" role="group" aria-label="업무 비서 제어"><button id="secretary-chat" class="mascot-control" type="button" title="업무 비서 대화 열기">대화</button><button id="secretary-pause" class="mascot-control" type="button" aria-pressed="false" title="이동 정지"><span class="mascot-control-icon" aria-hidden="true">■</span><span>이동 정지</span></button><button id="secretary-hide" class="mascot-control" type="button" title="업무 비서 숨기기">숨기기</button></div></div></div></div>
 
-<script src="/assets/portal.js?v=20260919b"></script>
-<script type="module" src="/assets/assistant.js?v=20260917"></script>
+<script src="/assets/portal.js?v=20260922"></script>
+<script type="module" src="/assets/assistant.js?v=20260922"></script>
 </body>
 </html>

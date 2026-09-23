@@ -45,7 +45,7 @@ def test_goal_create_checklist_needs_no_target(tmp_path, monkeypatch):
     monkeypatch.setattr(server_config, "GOALS_PATH", tmp_path / "goals.json")
     response = client.post(
         "/api/goals/day",
-        json={"project": "clink", "goal": "출근 준비", "kind": "checklist"},
+        json={"project": "ipis", "goal": "출근 준비", "kind": "checklist"},
     )
     assert response.status_code == 201
     assert response.json()["day"]["items"][0]["kind"] == "checklist"
@@ -99,7 +99,7 @@ def test_goal_delete_unlinks_tasks(tmp_path, monkeypatch):
     monkeypatch.setattr(server_config, "TASKS_PATH", tmp_path / "tasks.json")
     assert client.post(
         "/api/goals/day",
-        json={"project": "clink", "goal": "B", "kind": "checklist"},
+        json={"project": "ipis", "goal": "B", "kind": "checklist"},
     ).status_code == 201
     goal_id = client.get("/api/goals").json()["day"]["items"][0]["id"]
     task = client.post(

@@ -23,6 +23,8 @@ const mascot = new PlushMascot(mascotButton);
 function storageGet(key) { try { return localStorage.getItem(key); } catch (_) { return null; } }
 function storageSet(key, value) { try { localStorage.setItem(key, value); } catch (_) {} }
 function storageDel(key) { try { localStorage.removeItem(key); } catch (_) {} }
+function wakeDesktopPet() { try { fetch("/api/gombi/show", { method: "POST" }); } catch (_) {} }
+window.suhunWakeGombiPet = wakeDesktopPet;
 let returnFocus = null, panelOpen = false, hovering = false, paused = storageGet("secretary-paused") === "true";
 let hidden = storageGet("secretary-hidden") === "true", lastNotice = "", noticeTimer = 0, briefing = null, briefingKey = "";
 let briefingEvents = null, briefingFallbackTimer = 0;
@@ -97,6 +99,8 @@ function applyBriefing(next, announce = false, silenceChange = false) {
   const newProactive = Boolean(briefingKey) && [...nextProactive].some(id => !previousProactive.has(id));
   briefingKey = nextKey;
   if (announce || (!silenceChange && (changed || newProactive))) {
+    // 회사 업무관리에서 새로 불러온 내용이 있으면 숨긴 곰비를 다시 보여준다.
+    if (hidden) setHidden(false);
     const message = announce || newProactive ? proactiveText(briefing) : briefingText(briefing);
     say(`${announce ? "곰비예요. " : "알림: "}${message}`, true);
   }
@@ -149,7 +153,7 @@ async function loadAssistantActivity() {
 function openPanel(trigger = opener) { if (sideChat) { setHidden(false); bubble.hidden = true; document.getElementById("chat-input")?.focus(); return; } if (document.querySelector("dialog[open]") && !dialog.open) return; returnFocus = trigger; setHidden(false); panelOpen = true; bubble.hidden = true; syncMotion(); if (chat && chatHome) { chat.hidden = false; chatHome.before(chat); chatSlot.append(chat); chat.querySelector("#organize-title").textContent = "대화하기"; } else { chatSlot.innerHTML = '<p class="empty-state">업무 정리는 <a href="/organize">TODO-LIST 페이지</a>에서 이어가세요.</p>'; } dialog.showModal(); refreshBriefing(); requestAnimationFrame(() => { if (dialog.open) document.getElementById("chat-input")?.focus(); }); }
 function closePanel() { if (!dialog.open) return; dialog.close(); }
 function restorePanel() { if (sideChat) return; panelOpen = false; if (chat && chatHome) { chatHome.after(chat); chat.hidden = true; chat.querySelector("#organize-title").textContent = "TODO-LIST"; } else { chatSlot.innerHTML = ""; } syncMotion(); (returnFocus && !overlay.hidden ? returnFocus : opener).focus(); returnFocus = null; }
-function eventNotice(event) { const detail = event.detail || {}; const messages = { taskAdded: "할 일을 추가했어요. 잊지 않게 챙길게요.", taskDone: "완료 표시를 확인했어요. 수고했어요!", taskReopened: "할 일을 다시 진행 중으로 바꿨어요.", taskDeleted: "할 일을 목록에서 뺐어요.", goalsSaved: "목표를 저장했어요. 진행을 같이 볼게요.", assistantAction: "제안한 작업을 실행했어요.", organizing: "업무를 정리하는 중이에요.", waiting: "곰비가 답변을 기다리고 있어요.", finished: "업무 정리 답변을 받았어요.", error: "업무 정리를 마치지 못했어요. 다시 시도해 주세요." }; if (messages[detail.type]) say(messages[detail.type], true); refreshBriefing(false, true); if (detail.type === "assistantAction") loadAssistantActivity(); }
+function eventNotice(event) { const detail = event.detail || {}; const messages = { taskAdded: "할 일을 추가했어요. 잊지 않게 챙길게요.", taskDone: "완료 표시를 확인했어요. 수고했어요!", taskReopened: "할 일을 다시 진행 중으로 바꿨어요.", taskDeleted: "할 일을 목록에서 뺐어요.", goalsSaved: "목표를 저장했어요. 진행을 같이 볼게요.", assistantAction: "제안한 작업을 실행했어요.", organizing: "업무를 정리하는 중이에요.", waiting: "곰비가 답변을 기다리고 있어요.", finished: "업무 정리 답변을 받았어요.", error: "업무 정리를 마치지 못했어요. 다시 시도해 주세요." }; if (messages[detail.type]) { if (hidden) setHidden(false); say(messages[detail.type], true); } refreshBriefing(false, true); if (detail.type === "assistantAction") loadAssistantActivity(); }
 
 let dragging = false, pointerDown = false, suppressClick = false, dragStartX = 0, dragStartY = 0, dragOrigX = 0, dragOrigY = 0;
 mascotButton.addEventListener("click", event => { if (suppressClick) { suppressClick = false; event.stopImmediatePropagation(); event.preventDefault(); } }, true);
@@ -176,14 +180,15 @@ function endDrag(moved) {
 mascotButton.addEventListener("pointerup", () => endDrag(true));
 mascotButton.addEventListener("pointercancel", () => endDrag(false));
 mascotButton.addEventListener("dragstart", event => event.preventDefault());
+mascotButton.addEventListener("contextmenu", event => { event.preventDefault(); setHidden(true); });
 if (new URLSearchParams(location.search).get("secretary") === "show") { storageDel("secretary-hidden"); hidden = false; }
 mascot.start(); setPause(paused); setHidden(hidden); syncMotion(); move(true);
-opener.addEventListener("click", () => openPanel(opener)); mascotButton.addEventListener("click", () => openPanel(mascotButton));
+opener.addEventListener("click", () => { wakeDesktopPet(); openPanel(opener); }); mascotButton.addEventListener("click", () => openPanel(mascotButton));
 dockChat.addEventListener("click", () => openPanel(dockChat)); dockPause.addEventListener("click", () => setPause(!paused)); dockHide.addEventListener("click", () => setHidden(true));
 document.getElementById("secretary-bubble-dismiss").addEventListener("click", () => { bubble.hidden = true; syncMotion(true); });
 closeButton.addEventListener("click", closePanel); dialog.addEventListener("close", restorePanel); pauseButton.addEventListener("click", () => setPause(!paused));
 hideButton.addEventListener("click", () => { closePanel(); setHidden(true); });
-document.getElementById("assistant-today").addEventListener("click", () => refreshBriefing(true));
+document.getElementById("assistant-today").addEventListener("click", () => { wakeDesktopPet(); refreshBriefing(true); });
 document.getElementById("assistant-organize").addEventListener("click", () => { const input = document.getElementById("chat-input"); const form = document.getElementById("chat-form"); if (input && form) { input.value = "오늘 업무를 정리해줘."; form.requestSubmit(); } else { closePanel(); location.href = "/organize"; } });
 document.getElementById("assistant-goals").addEventListener("click", () => { closePanel(); document.getElementById("goals")?.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); });
 roamer.addEventListener("mouseenter", () => { hovering = true; syncMotion(); }); roamer.addEventListener("mouseleave", () => { hovering = false; syncMotion(); });

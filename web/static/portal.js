@@ -52,7 +52,6 @@ manualDialog.addEventListener("click", event => {
 }
 
 const APP_DETAILS = {
-  clink: { name: "CLINK", purpose: "보험금 청구서 자동 작성", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M7 3.5h7l3 3V20H7z" stroke-linejoin="round"/><path d="M14 3.5V7h3M9.5 11h5M9.5 14.5h5" stroke-linecap="round"/></svg>' },
   ipis: { name: "IPIS", purpose: "보험 CMT 매칭", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="16" r="3"/><path d="m10.2 10.2 3.6 3.6M5 17.5h6M13 6.5h6" stroke-linecap="round"/></svg>' },
   trading: { name: "Trading", purpose: "트레이딩 대시보드", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 18.5h16M6 15l3-4 3 2 5-6" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 7h3v3" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
   rivals: { name: "Rivals Deck", purpose: "9이닝스 라이벌즈 덱관리", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M7 4.5c2.5 3 2.5 12 0 15M17 4.5c-2.5 3-2.5 12 0 15" stroke-linecap="round" stroke-dasharray="2.5 1.8"/></svg>' },
@@ -91,7 +90,7 @@ function setGoalsStatus(message, kind = "") {
   node.className = `chat-status${kind ? ` ${kind}` : ""}`;
 }
 
-const projectNames = { ipis: "IPIS", clink: "CLINK" };
+const projectNames = { ipis: "IPIS" };
 const priorityNames = { high: "높음", mid: "보통", low: "낮음" };
 const kindNames = { numeric: "수치형", checklist: "체크형" };
 let goalTasks = [];
@@ -389,7 +388,7 @@ function showGoalEditor(period, index) {
   const form = document.createElement("form");
   form.className = "goal-edit-form goal-edit-full";
   form.innerHTML = `
-    <label>프로젝트 <select name="project"><option value="ipis">IPIS</option><option value="clink">CLINK</option></select></label>
+    <label>프로젝트 <select name="project"><option value="ipis">IPIS</option></select></label>
     <label>목표 내용 <input name="goal" type="text" maxlength="200" required value="${escapeHtml(item.goal || "")}"></label>
     <label>종류 <select name="kind"><option value="numeric">수치형</option><option value="checklist">체크형</option></select></label>
     <span class="goal-edit-numeric">
@@ -698,7 +697,7 @@ if (taskDateInput) {
   taskDateInput.onchange = () => { syncCalendar(); loadTasks(); };
 }
 const tasksRefresh = document.getElementById("tasks-refresh");
-if (tasksRefresh) tasksRefresh.onclick = loadTasks;
+if (tasksRefresh) tasksRefresh.onclick = () => { window.suhunWakeGombiPet?.(); loadTasks(); };
 
 const holidayCache = new Map();
 let calYear = 0;
@@ -864,7 +863,6 @@ async function loadApps() {
     const catalog = catalogResponse.ok ? await catalogResponse.json() : null;
     const groups = Array.isArray(catalog?.groups) && catalog.groups.length ? catalog.groups : APP_GROUP_FALLBACK;
     const items = Array.isArray(catalog?.apps) && catalog.apps.length ? catalog.apps : [
-      { key: "clink", kind: "managed", group: "work" },
       { key: "ipis", kind: "managed", group: "work" },
       { key: "trading", kind: "managed", group: "personal" },
     ];
@@ -1235,7 +1233,7 @@ if (document.getElementById("task-date")) {
 const appsRefresh = document.getElementById("apps-refresh");
 if (document.getElementById("apps")) {
   loadApps();
-  if (appsRefresh) appsRefresh.onclick = loadApps;
+  if (appsRefresh) appsRefresh.onclick = () => { window.suhunWakeGombiPet?.(); loadApps(); };
   setInterval(loadApps, 15000);
 }
 
@@ -1349,5 +1347,5 @@ async function loadWorkDigest(refresh = false) {
 }
 
 const digestRefresh = document.getElementById("work-digest-refresh");
-if (digestRefresh) digestRefresh.addEventListener("click", () => loadWorkDigest(true));
+if (digestRefresh) digestRefresh.addEventListener("click", () => { window.suhunWakeGombiPet?.(); loadWorkDigest(true); });
 if (document.getElementById("work-digest-content")) loadWorkDigest();

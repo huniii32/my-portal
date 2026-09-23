@@ -54,6 +54,9 @@ def _static_candidates(asset_path: str) -> list:
         "assistant.js": ROOT / "assistant.js",
         "mascot.js": ROOT / "mascot.js",
     }
+    if asset_path == "calendar-favicon.svg":
+        # assets/ 아래에서 함께 관리된다(mascot/vendor와 동일 레이아웃).
+        return [STATIC_DIR / "assets" / asset_path, legacy_map[asset_path]]
     if asset_path in legacy_map:
         return [STATIC_DIR / asset_path, legacy_map[asset_path]]
     # mascot/* and vendor/* live under assets/ in both layouts.

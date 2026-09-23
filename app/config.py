@@ -37,15 +37,6 @@ APPS: dict[str, dict] = {
         "cwd": WORKSPACE / "IPIS_CMT_WEB",
         "group": "work",
     },
-    "clink": {
-        "name": "CLINK",
-        "port": 5175,
-        "health": "http://127.0.0.1:8001/api/health",
-        "unit": "clink-web.service",
-        "command": ["systemctl", "--user", "start", "clink-web.service"],
-        "cwd": WORKSPACE / "clink",
-        "group": "work",
-    },
     "trading": {
         "name": "Trading Agent World",
         "port": 5174,

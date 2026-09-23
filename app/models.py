@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator, 
 
 class GoalItem(BaseModel):
     id: str = Field(default_factory=lambda: uuid4().hex, pattern=r"^[0-9a-f]{32}$")
-    project: Literal["ipis", "clink"]
+    project: Literal["ipis"]
     goal: str = Field(min_length=1, max_length=200)
     target: float = 0
     current: float = 0
@@ -54,7 +54,7 @@ class GoalProgressUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     current: float | None = None
-    project: Literal["ipis", "clink"] | None = None
+    project: Literal["ipis"] | None = None
     goal: str | None = Field(default=None, max_length=200)
     target: float | None = None
     unit: str | None = Field(default=None, max_length=20)

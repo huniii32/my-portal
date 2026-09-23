@@ -603,3 +603,29 @@ def test_chat_window_is_async_bounded_and_uses_shared_chat_session():
     assert "body.set_text(content)" in source
     assert "body.set_markup" not in source
     assert "if self._chat_window is not None:" in source[source.index("def _destroy"):source.index("else:", source.index("def _destroy"))]
+
+
+def test_show_request_roundtrip(tmp_path):
+    path = tmp_path / "show_requested"
+    assert desktop_pet.read_show_request(path) is None
+    assert desktop_pet.request_pet_show(path) is True
+    requested = desktop_pet.read_show_request(path)
+    assert isinstance(requested, float) and requested > 0
+
+
+def test_show_request_rejects_garbage(tmp_path):
+    path = tmp_path / "show_requested"
+    for garbage in ["", "not-a-time", "nan", "inf", "-3"]:
+        path.write_text(garbage, encoding="utf-8")
+        assert desktop_pet.read_show_request(path) is None
+
+
+def test_hidden_pet_is_reshown_on_show_request_and_new_briefing():
+    source = Path(desktop_pet.__file__).read_text(encoding="utf-8")
+    assert "def request_pet_show" in source
+    assert "def read_show_request" in source
+    assert "def _poll_show_request" in source
+    assert "GLib.timeout_add(2000, self._poll_show_request)" in source
+    assert "self._ensure_visible()" in source
+    assert "control.show()" in source
+    assert "self.present()" in source

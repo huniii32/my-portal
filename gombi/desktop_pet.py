@@ -13,6 +13,7 @@ import shutil
 import stat
 import subprocess
 import threading
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -343,6 +344,44 @@ def save_seen_proactive(seen: Iterable[str], path: Path | None = None) -> bool:
             temporary.unlink(missing_ok=True)
         except OSError:
             pass
+
+
+def show_request_path(environ: Any | None = None) -> Path:
+    values = os.environ if environ is None else environ
+    state_home = values.get("XDG_STATE_HOME")
+    return Path(state_home) / "suhun-gombi" / "show_requested" if state_home else Path.home() / ".local" / "state" / "suhun-gombi" / "show_requested"
+
+
+def request_pet_show(path: Path | None = None) -> bool:
+    """회사 업무관리(포털 웹)에서 숨긴 데스크톱 펫을 다시 보여달라는 신호를 남긴다."""
+    target = path or show_request_path()
+    temporary = target.with_name(f".{target.name}.{os.getpid()}.tmp")
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        temporary.write_text(f"{time.time()}", encoding="utf-8")
+        temporary.replace(target)
+        return True
+    except OSError:
+        return False
+    finally:
+        try:
+            temporary.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
+def read_show_request(path: Path | None = None) -> float | None:
+    try:
+        raw = (path or show_request_path()).read_text(encoding="utf-8").strip()
+    except (OSError, TypeError, ValueError):
+        return None
+    try:
+        requested = float(raw)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(requested) or requested < 0:
+        return None
+    return requested
 
 
 def normalize_position(position: Any) -> tuple[int, int] | None:
@@ -841,6 +880,8 @@ if Gtk is not None:
             self._reduced_motion = os.environ.get("GOMBI_REDUCED_MOTION") == "1"
             self._roam_enabled = roaming_enabled()
             self._roam_timer = 0
+            self._show_timer = 0
+            self._show_seen = 0.0
             self._roam_dx = 1.4
             self._roam_dy = 0.8
             self.add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_RELEASE_MASK | Gdk.EventMask.POINTER_MOTION_MASK)
@@ -866,6 +907,9 @@ if Gtk is not None:
             GLib.idle_add(self._position_portal_control_idle)
             if self._roam_enabled:
                 self._roam_timer = GLib.timeout_add(40, self._roam)
+            # 시작 시점의 신호는 무시한다: 펫은 시작할 때 이미 보이는 상태다.
+            self._show_seen = read_show_request() or 0.0
+            self._show_timer = GLib.timeout_add(2000, self._poll_show_request)
             self._listener = BriefingListener(f"{self.portal_url}{EVENTS_URL}", self._briefing_changed)
             self._listener.start()
 
@@ -1382,7 +1426,38 @@ if Gtk is not None:
             self._position_portal_control()
             GLib.idle_add(self._position_portal_control_idle)
 
+        def _ensure_visible(self) -> None:
+            # 우클릭으로 숨긴 펫을 다시 보여준다. hide()된 창은 show()로
+            # 가시 플래그를 되돌린 뒤 present()로 앞으로 가져와야 한다.
+            control = getattr(self, "_portal_control", None)
+            if control is not None:
+                control.show()
+            self.show()
+            self.present()
+            self._position_portal_control()
+
+        def _poll_show_request(self) -> bool:
+            """포털 웹의 '다시 보기' 신호를 주기적으로 확인한다."""
+            if self._pet_destroyed:
+                return False
+            requested = read_show_request()
+            if requested is not None and requested > self._show_seen:
+                self._show_seen = requested
+                self._ensure_visible()
+            return True
+
+        def _hide_pet(self) -> None:
+            # 우클릭 숨기기: 펫 창과 따라다니는 컨트롤을 함께 감춘다.
+            # 회사 업무관리의 새 브리핑 알림이 오면 _show_notification에서 다시 보여준다.
+            control = getattr(self, "_portal_control", None)
+            if control is not None:
+                control.hide()
+            self.hide()
+
         def _press(self, _widget: Any, event: Any) -> bool:
+            if event.button == 3:
+                self._hide_pet()
+                return True
             if event.button != 1:
                 return False
             self._drag_origin = (event.x_root, event.y_root)
@@ -1422,6 +1497,7 @@ if Gtk is not None:
             GLib.idle_add(self._show_notification, notice)
 
         def _show_notification(self, notice: dict[str, str]) -> bool:
+            self._ensure_visible()
             if len(self._notification_cards) >= 3:
                 self._hide_notification(self._notification_cards[0])
             screen = Gdk.Screen.get_default()
@@ -1479,6 +1555,10 @@ if Gtk is not None:
             self._listener.stop()
             if self._roam_timer:
                 GLib.source_remove(self._roam_timer)
+                self._roam_timer = 0
+            if self._show_timer:
+                GLib.source_remove(self._show_timer)
+                self._show_timer = 0
             if self._detail_window is not None:
                 self._close_notification_detail(None, self._detail_card, False)
             for card in self._notification_cards:

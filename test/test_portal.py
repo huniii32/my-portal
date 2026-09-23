@@ -22,9 +22,9 @@ def test_launch_rejects_unknown_app():
         assert response.status_code == 404, f"{unknown!r}이(가) 통과했다"
 
 
-def test_registry_holds_exactly_three_apps():
+def test_registry_holds_exactly_two_apps():
     """앱을 늘리려면 코드를 고쳐야 한다. 런타임에 늘어나는 경로가 없어야 한다."""
-    assert set(APPS) == {"ipis", "clink", "trading"}
+    assert set(APPS) == {"ipis", "trading"}
 
 
 def test_registry_commands_are_argument_lists():
@@ -34,18 +34,12 @@ def test_registry_commands_are_argument_lists():
         assert entry["cwd"].is_dir(), f"{key} 작업 디렉터리가 없다: {entry['cwd']}"
 
 
-def test_registry_uses_current_service_commands_and_clink_web_port():
+def test_registry_uses_current_service_commands():
     assert APPS["ipis"]["command"] == [
         "systemctl",
         "--user",
         "start",
         "ipis-cmt-web.service",
-    ]
-    assert APPS["clink"]["command"] == [
-        "systemctl",
-        "--user",
-        "start",
-        "clink-web.service",
     ]
     assert APPS["trading"]["command"] == [
         "systemctl",
@@ -53,8 +47,6 @@ def test_registry_uses_current_service_commands_and_clink_web_port():
         "start",
         "trading-agent-dashboard.service",
     ]
-    assert APPS["clink"]["port"] == 5175
-    assert APPS["clink"]["health"] == "http://127.0.0.1:8001/api/health"
 
 
 def test_mascot_sprite_is_allowlisted():
@@ -93,16 +85,16 @@ def test_launch_starts_unit_with_async_exec_and_returns_journal_hint(monkeypatch
     monkeypatch.setattr(server_apps, "_is_up", down)
     monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
 
-    response = client.post("/api/launch/clink")
+    response = client.post("/api/launch/trading")
 
     assert response.status_code == 200
     assert response.json() == {
         "status": "launched",
-        "log": "journalctl --user -u clink-web.service -n 100 -f",
-        "port": 5175,
+        "log": "journalctl --user -u trading-agent-dashboard.service -n 100 -f",
+        "port": 5174,
     }
-    assert calls[0][0] == tuple(APPS["clink"]["command"])
-    assert calls[0][1]["cwd"] == APPS["clink"]["cwd"]
+    assert calls[0][0] == tuple(APPS["trading"]["command"])
+    assert calls[0][1]["cwd"] == APPS["trading"]["cwd"]
     assert calls[0][1]["stdout"] is asyncio.subprocess.DEVNULL
     assert calls[0][1]["stderr"] is asyncio.subprocess.DEVNULL
     assert "shell" not in calls[0][1]
@@ -147,21 +139,21 @@ def test_status_reports_every_app():
     response = client.get("/api/status")
     assert response.status_code == 200
     body = response.json()
-    assert set(body) == {"ipis", "clink", "trading"}
+    assert set(body) == {"ipis", "trading"}
     for key, entry in body.items():
         assert isinstance(entry["up"], bool), f"{key} up이 bool이 아니다"
         assert entry["port"] == APPS[key]["port"]
 
 
 def test_app_catalog_groups_managed_and_links():
-    """바로가기 목록은 회사/개인 그룹과 관리형 3종 + 외부 링크를 돌려준다."""
+    """바로가기 목록은 회사/개인 그룹과 관리형 2종 + 외부 링크를 돌려준다."""
     response = client.get("/api/apps")
     assert response.status_code == 200
     body = response.json()
     assert [group["id"] for group in body["groups"]] == ["work", "personal"]
     by_key = {app["key"]: app for app in body["apps"]}
-    assert set(by_key) == {"ipis", "clink", "trading", "rivals"}
-    assert by_key["ipis"]["group"] == "work" and by_key["clink"]["group"] == "work"
+    assert set(by_key) == {"ipis", "trading", "rivals"}
+    assert by_key["ipis"]["group"] == "work"
     assert by_key["trading"]["group"] == "personal"
     assert by_key["ipis"]["kind"] == "managed"
     rivals = by_key["rivals"]
@@ -208,9 +200,9 @@ def test_goals_put_drops_day_duplicates_of_week(tmp_path, monkeypatch):
     monkeypatch.setattr(server_config, "GOALS_PATH", tmp_path / "goals.json")
     payload = {
         "week": {"start": "2026-09-14", "items": [
-            {"project": "clink", "goal": "팩스 1건", "target": 1, "current": 0, "unit": "건"}]},
+            {"project": "ipis", "goal": "팩스 1건", "target": 1, "current": 0, "unit": "건"}]},
         "day": {"date": "2026-09-16", "items": [
-            {"project": "clink", "goal": "팩스 1건", "target": 1, "current": 0, "unit": "건"},
+            {"project": "ipis", "goal": "팩스 1건", "target": 1, "current": 0, "unit": "건"},
             {"project": "ipis", "goal": "오늘 전화", "target": 5, "current": 0, "unit": "건"}]},
     }
     assert client.put("/api/goals", json=payload).status_code == 200
@@ -220,7 +212,7 @@ def test_goals_put_drops_day_duplicates_of_week(tmp_path, monkeypatch):
 
 
 def test_goals_rejects_unknown_project(tmp_path, monkeypatch):
-    """project는 ipis/clink 둘뿐이다. 오타가 조용히 저장되면 안 된다."""
+    """project는 ipis 하나뿐이다. 오타가 조용히 저장되면 안 된다."""
     import server
 
     monkeypatch.setattr(server_config, "GOALS_PATH", tmp_path / "goals.json")
@@ -263,7 +255,7 @@ def test_system_prompt_names_projects_and_json_shape():
     import server
 
     prompt = server.system_prompt()
-    assert "ipis" in prompt and "clink" in prompt
+    assert "ipis" in prompt
     assert "target" in prompt and "unit" in prompt
     assert "```json" in prompt
 
@@ -323,7 +315,7 @@ def test_goal_progress_update_rejects_stale_and_preserves_other_goals(tmp_path, 
     payload = {
         "week": {"start": "2026-09-14", "items": [
             {"project": "ipis", "goal": "A", "target": 10, "current": 0, "unit": "건"},
-            {"project": "clink", "goal": "B", "target": 10, "current": 1, "unit": "건"},
+            {"project": "ipis", "goal": "B", "target": 10, "current": 1, "unit": "건"},
         ]},
         "day": {"date": "2026-09-15", "items": []},
     }
@@ -354,7 +346,7 @@ def test_recent_commits_reads_every_repo():
     import server
 
     summary = server.recent_commits(days=3650)
-    assert "[ipis]" in summary and "[clink]" in summary and "[trading]" in summary
+    assert "[ipis]" in summary and "[trading]" in summary
 
 
 def test_assistant_briefing_only_reports_current_goals_and_unfinished_work(tmp_path, monkeypatch):
@@ -371,7 +363,7 @@ def test_assistant_briefing_only_reports_current_goals_and_unfinished_work(tmp_p
     ]), encoding="utf-8")
     (tmp_path / "goals.json").write_text(json.dumps({
         "week": {"start": "2026-09-14", "items": [{"project": "ipis", "goal": "이번 주", "target": 10, "current": 2, "unit": "건"}]},
-        "day": {"date": "2026-09-15", "items": [{"project": "clink", "goal": "오늘", "target": 3, "current": 1, "unit": "건"}]},
+        "day": {"date": "2026-09-15", "items": [{"project": "ipis", "goal": "오늘", "target": 3, "current": 1, "unit": "건"}]},
     }), encoding="utf-8")
 
     response = client.get("/api/assistant/briefing")
@@ -782,8 +774,27 @@ def test_each_page_serves_with_sidebar_links_and_shared_assets():
     for path in pages:
         body = client.get(path).text
         assert "/assets/portal.css?v=20260919b" in body
-        assert "/assets/portal.js?v=20260919b" in body
+        assert "/assets/portal.js?v=20260922" in body
         assert "/assets/assistant.css?v=20260917" in body
-        assert "/assets/assistant.js?v=20260917" in body
+        assert "/assets/assistant.js?v=20260922" in body
     assert client.get("/assets/portal.css").status_code == 200
     assert client.get("/assets/portal.js").status_code == 200
+
+
+def test_gombi_show_records_desktop_pet_request(monkeypatch):
+    from app.routers import assistant as assistant_router
+
+    calls = []
+    monkeypatch.setattr(assistant_router._gombi_pet, "request_pet_show", lambda path=None: calls.append(path) or True)
+    response = client.post("/api/gombi/show")
+    assert response.status_code == 200
+    assert response.json() == {"status": "requested"}
+    assert calls == [None]
+
+
+def test_gombi_show_reports_storage_failure(monkeypatch):
+    from app.routers import assistant as assistant_router
+
+    monkeypatch.setattr(assistant_router._gombi_pet, "request_pet_show", lambda path=None: False)
+    response = client.post("/api/gombi/show")
+    assert response.status_code == 503

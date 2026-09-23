@@ -26,6 +26,7 @@ from app.storage import (
     save_tasks,
     task_storage_error,
 )
+from gombi import desktop_pet as _gombi_pet
 
 router = APIRouter()
 
@@ -81,6 +82,14 @@ async def assistant_events(request: Request) -> StreamingResponse:
 def read_assistant_activity() -> list[dict]:
     with DATA_LOCK:
         return _read_assistant_activity()
+
+
+@router.post("/api/gombi/show")
+def show_gombi_pet() -> dict:
+    """숨긴 데스크톱 곰비 펫을 다시 보여달라고 요청한다. 입력 없이 신호 파일만 남긴다."""
+    if not _gombi_pet.request_pet_show():
+        raise HTTPException(status_code=503, detail="곰비 펫에 표시 요청을 전달하지 못했습니다.")
+    return {"status": "requested"}
 
 
 @router.post("/api/assistant/actions")
