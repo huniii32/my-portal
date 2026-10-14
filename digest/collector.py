@@ -37,7 +37,7 @@ CODEX_HISTORY = Path.home() / ".codex" / "history.jsonl"
 CLAUDE_ROOT = Path.home() / ".claude" / "projects" / "-home-ipis-woker1-suhun"
 OPENCODE_DB = Path.home() / ".local" / "share" / "opencode" / "opencode.db"
 HANDOFF_PATH = WORKSPACE / "HANDOFF.md"
-VLLM_BASE_URL = os.getenv("PORTAL_VLLM_BASE_URL", "http://192.168.0.85:8000/v1")
+VLLM_BASE_URL = os.getenv("PORTAL_VLLM_BASE_URL", "")
 VLLM_MODEL = os.getenv("PORTAL_VLLM_MODEL", "Qwen3.8-27B")
 
 

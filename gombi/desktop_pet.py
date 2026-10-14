@@ -864,6 +864,7 @@ if Gtk is not None:
             self._chat_load_id = 0
             self._chat_request_id = 0
             self._pet_destroyed = False
+            self._pet_hidden = False
             self.set_decorated(False)
             self.set_keep_above(True)
             self.set_skip_taskbar_hint(True)
@@ -1429,6 +1430,7 @@ if Gtk is not None:
         def _ensure_visible(self) -> None:
             # 우클릭으로 숨긴 펫을 다시 보여준다. hide()된 창은 show()로
             # 가시 플래그를 되돌린 뒤 present()로 앞으로 가져와야 한다.
+            self._pet_hidden = False
             control = getattr(self, "_portal_control", None)
             if control is not None:
                 control.show()
@@ -1448,7 +1450,9 @@ if Gtk is not None:
 
         def _hide_pet(self) -> None:
             # 우클릭 숨기기: 펫 창과 따라다니는 컨트롤을 함께 감춘다.
-            # 회사 업무관리의 새 브리핑 알림이 오면 _show_notification에서 다시 보여준다.
+            # 숨겨진 동안에는 새 브리핑 알림도 띄우지 않는다. 다시 보려면
+            # 포털 웹의 '다시 보기' 신호(_poll_show_request)를 써야 한다.
+            self._pet_hidden = True
             control = getattr(self, "_portal_control", None)
             if control is not None:
                 control.hide()
@@ -1492,6 +1496,8 @@ if Gtk is not None:
             return True
 
         def _briefing_changed(self, notice: dict[str, str]) -> None:
+            if self._pet_hidden:
+                return
             text = notice.get("message", "")
             notify_briefing(text)
             GLib.idle_add(self._show_notification, notice)

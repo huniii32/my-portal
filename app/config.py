@@ -22,7 +22,7 @@ SEOUL = ZoneInfo("Asia/Seoul")
 # ponytail: one process lock; use a shared database or file lock if uvicorn gains workers.
 DATA_LOCK = threading.RLock()
 
-VLLM_BASE_URL = os.getenv("PORTAL_VLLM_BASE_URL", "http://192.168.0.85:8000/v1")
+VLLM_BASE_URL = os.getenv("PORTAL_VLLM_BASE_URL", "")
 VLLM_MODEL = os.getenv("PORTAL_VLLM_MODEL", "Qwen3.8-27B")
 
 # 새 앱을 늘리려면 여기에 직접 적어야 한다. 런타임에 늘어나는 경로는 없다.

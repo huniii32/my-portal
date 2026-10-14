@@ -66,7 +66,7 @@ def test_secret_probes_are_redacted_or_excluded_from_model_evidence(monkeypatch)
         captured["body"] = request.data.decode()
         return Response()
 
-    work_digest.summarize_with_model(date(2026, 9, 16), evidence, opener=opener)
+    work_digest.summarize_with_model(date(2026, 9, 16), evidence, base_url="http://llm.test/v1", opener=opener)
     assert probes[0] not in captured.get("body", "")
 
 
@@ -217,12 +217,12 @@ def test_model_json_is_strictly_bounded_and_malformed_is_rejected():
         timeouts.append(kwargs.get("timeout"))
         payloads.append(json.loads(_request.data.decode()))
         return Response(json.dumps({"choices": [{"message": {"content": content}}]}, ensure_ascii=False).encode())
-    summary = work_digest.summarize_with_model(date(2026, 9, 16), evidence, opener=opener)
+    summary = work_digest.summarize_with_model(date(2026, 9, 16), evidence, base_url="http://llm.test/v1", opener=opener)
     assert summary == {"completed": ["완료"], "in_progress": [], "cautions": [], "tomorrow": []}
     assert timeouts == [work_digest.WORK_DIGEST_MODEL_TIMEOUT]
     assert payloads[0]["chat_template_kwargs"] == {"enable_thinking": False}
     malformed = lambda *_args, **_kwargs: Response(b"{bad")
-    assert work_digest.summarize_with_model(date(2026, 9, 16), evidence, opener=malformed) is None
+    assert work_digest.summarize_with_model(date(2026, 9, 16), evidence, base_url="http://llm.test/v1", opener=malformed) is None
 
 
 def test_model_timeout_is_safely_clamped():

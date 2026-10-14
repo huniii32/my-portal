@@ -29,6 +29,9 @@ async def chat(request: ChatRequest) -> StreamingResponse:
     }
 
     async def relay():
+        if not VLLM_BASE_URL:
+            yield f"data: {json.dumps({'error': 'LLM 미설정: PORTAL_VLLM_BASE_URL을 지정하세요'})}\n\n"
+            return
         try:
             async with httpx.AsyncClient(timeout=120) as client:
                 async with client.stream(
